@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: krishirate
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DATA_GOV_RESOURCE_ID
+        value: "9ef8426c-d546-49ea-a7cf-19c79e35c7d7"
+      - key: API_HOST
+        value: "0.0.0.0"
+      - key: API_PORT
+        value: "8000"
+      - key: KRISHI_DATABASE_URL
+        value: "sqlite:////app/data/krishirate.db"
+      - key: ALERT_COOLDOWN_HOURS
+        value: "24"
+      - key: ALERT_JOB_INTERVAL_HOURS
+        value: "6"
+      - key: RATE_LIMIT_REQUESTS
+        value: "30"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
+
+# Required secrets (set these in the Render dashboard, never commit them):
+#   DATA_GOV_API_KEY
+#   TELEGRAM_BOT_TOKEN
+#   TELEGRAM_CHAT_ID
+#
+# To use a free managed PostgreSQL database on Render instead of SQLite:
+#   1. Create a PostgreSQL database in Render (free tier available).
+#   2. Attach it to the krishirate web service.
+#   3. Render injects DATABASE_URL automatically; set
+#      KRISHI_DATABASE_URL = ${DATABASE_URL} (or leave Render's DATABASE_URL
+#      and KrishiRate will read it).
+#   4. KrishiRate normalizes "postgres://" to "postgresql+psycopg2://"
+#      and uses psycopg2-binary as the driver.

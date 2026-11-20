@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiRate - Mandi Prices</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <!-- Chart.js from CDN for the 30-day trend chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+
+  <header class="header">
+    <h1 class="txt-title">KrishiRate</h1>
+    <p class="txt-subtitle">Today's Mandi Prices</p>
+    <div class="lang-toggle">
+      <label for="lang">ಭಾಷೆ / Language</label>
+      <select id="lang">
+        <option value="en">English</option>
+        <option value="kn">ಕನ್ನಡ</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Filters: crop, district, market -->
+  <section class="filters">
+    <div class="field">
+      <label for="crop">Crop</label>
+      <select id="crop"></select>
+    </div>
+    <div class="field">
+      <label for="district">District</label>
+      <select id="district"></select>
+    </div>
+    <div class="field">
+      <label for="market">Market (Mandi)</label>
+      <select id="market"></select>
+    </div>
+    <button id="refreshBtn">Refresh Prices</button>
+    <button id="compareBtn">Compare Markets</button>
+  </section>
+
+  <!-- Set price alert form -->
+  <section class="alert-form" id="alertSection">
+    <h2 id="alertHeading">Set Price Alert</h2>
+    <form id="alertForm" novalidate>
+      <div class="field">
+        <label for="alertChatId">Telegram Chat ID</label>
+        <input type="text" id="alertChatId" placeholder="your chat id" required />
+      </div>
+      <div class="field">
+        <label for="alertCrop">Crop</label>
+        <select id="alertCrop"></select>
+      </div>
+      <div class="field">
+        <label for="alertDistrict">District</label>
+        <select id="alertDistrict"></select>
+      </div>
+      <div class="field">
+        <label for="alertMarket">Market (Mandi) - optional</label>
+        <select id="alertMarket">
+          <option value="">Any market</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="alertTargetPrice">Target Price (&#8377;/quintal)</label>
+        <input type="number" id="alertTargetPrice" step="0.01" min="0" required />
+      </div>
+      <div class="field">
+        <label for="alertCondition">Condition</label>
+        <select id="alertCondition">
+          <option value="above">Price goes above target</option>
+          <option value="below">Price goes below target</option>
+        </select>
+      </div>
+      <button type="submit" id="alertSubmitBtn">Set Alert</button>
+      <p id="alertMsg" class="status-msg hidden"></p>
+    </form>
+  </section>
+
+  <!-- Status / loading / error area -->
+  <div id="status" class="status hidden">Loading...</div>
+
+  <!-- Today's price cards -->
+  <section class="today-card" id="todaySection" hidden>
+    <div class="card-row">
+      <div class="price-card" id="modalCard">
+        <div class="card-label">Modal Price</div>
+        <div class="card-value" id="modalValue">&#8377;0</div>
+        <div class="card-unit">/quintal</div>
+      </div>
+      <div class="price-card" id="minCard">
+        <div class="card-label">Minimum Price</div>
+        <div class="card-value" id="minValue">&#8377;0</div>
+        <div class="card-unit">/quintal</div>
+      </div>
+      <div class="price-card" id="maxCard">
+        <div class="card-label">Maximum Price</div>
+        <div class="card-value" id="maxValue">&#8377;0</div>
+        <div class="card-unit">/quintal</div>
+      </div>
+    </div>
+    <p class="data-date" id="dataDate"></p>
+  </section>
+
+  <!-- Market comparison -->
+  <section class="compare-section" id="compareSection" hidden>
+    <h2 id="compareHeading">Market Comparison</h2>
+    <div class="table-wrapper">
+      <table id="compareTable">
+        <thead>
+          <tr>
+            <th id="thMarket">Market</th>
+            <th id="thModal">Modal Price</th>
+            <th id="thMin">Min Price</th>
+            <th id="thMax">Max Price</th>
+          </tr>
+        </thead>
+        <tbody id="compareBody"></tbody>
+      </table>
+    </div>
+    <p id="compareDate" class="data-date"></p>
+  </section>
+
+  <!-- Trend chart -->
+  <section class="chart-section" id="chartSection" hidden>
+    <h2>30-Day Price Trend</h2>
+    <div class="chart-wrapper">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </section>
+
+  <p id="emptyMsg" class="empty-msg hidden">No price data found for this selection.</p>
+
+  <footer class="footer">
+    <p>Data source: data.gov.in (Agmarknet) &middot; Falls back to sample data when offline</p>
+  </footer>
+
+</body>
+</html>
