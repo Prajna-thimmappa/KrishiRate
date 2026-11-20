@@ -285,4 +285,3 @@ No code change is required to switch from SQLite to PostgreSQL — just set
   `/alerts/price`) are rate-limited per IP to prevent abuse.
 - SQLite is file-based; for multi-instance deployment, use a shared database
   or persistent volume for `data/krishirate.db`.
-
