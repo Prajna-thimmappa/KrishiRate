@@ -40,18 +40,15 @@ const LANGUAGES = {
     datePrefix: "Data as of",
     compareHeading: "Market Comparison",
     compareDatePrefix: "Data as of",
+    todayHeading: "Today's Prices",
+    trendHeading: "30-Day Price Trend",
+    sourceApi: "Live data from data.gov.in API",
+    sourceCsv: "Offline sample data (API unavailable)",
+    refreshed: "Last refreshed",
+    toastRefresh: "Prices refreshed",
+    toastAlertSet: "Alert set successfully",
+    toastAlertError: "Failed to set alert",
     alertHeading: "Set Price Alert",
-    alertChatId: "Telegram Chat ID",
-    alertCrop: "Crop",
-    alertDistrict: "District",
-    alertMarket: "Market (Mandi) - optional",
-    alertTargetPrice: "Target Price (/quintal)",
-    alertCondition: "Condition",
-    alertAbove: "Price goes above target",
-    alertBelow: "Price goes below target",
-    alertSetBtn: "Set Alert",
-    alertCreated: "Alert created successfully.",
-    alertError: "Error setting alert. Please try again.",
   },
   kn: {
     title: "ಕೃಷಿರೇಟ್",
@@ -86,6 +83,14 @@ const LANGUAGES = {
     alertSetBtn: "ನಿಗಧಿ",
     alertCreated: "ಎಚ್ಚರಿಕೆ ಯಶಸ್ವಿಯಾಗಿ ನಿಗಧಿಗೆ yhtyeಿತು.",
     alertError: "ಎಚ್ಚರಿಕೆಯನ್ನು ನಿಗಧಿಗೊಳುವುದರಲ್ಲಿ ದೋಷ. ದಯವಿಟ್ಟು ಮರುಪ್ರಯತ್ನಿಸಿ.",
+    todayHeading: "ಇಂದಿನ ಬೆಲೆಗಳು",
+    trendHeading: "30-ದಿನ ಬೆಲೆ ಪ್ರವೃತ್ತಿ",
+    sourceApi: "ಲೈವ್ ಡೇಟಾ data.gov.in API",
+    sourceCsv: "ಆಫ್‌ಲೈನ್ ಸ್ಯಾಂಪಲ್ ಡೇಟಾ (API ಲಭ್ಯವಿಲ್ಲ)",
+    refreshed: "ಕೊನೆಯ ನವೀಕರಣ",
+    toastRefresh: "ಬೆಲೆಗಳನ್ನು ನವೀಕರಿಸಲಾಗಿದೆ",
+    toastAlertSet: "ಎಚ್ಚರಿಕೆ ನಿಗಧிகೊಳಲಾಗಿದೆ",
+    toastAlertError: "ಎಚ್ಚರಿಕೆ ನಿಗಧಿಕೊಳುವುದರಲ್ಲಿ ದೋಷ",
   },
 };
 
@@ -142,7 +147,13 @@ function applyText() {
   units.forEach((u) => (u.textContent = TEXT.unit));
 
   const chartHeading = document.querySelector(".chart-section h2");
-  if (chartHeading) chartHeading.textContent = TEXT.trend;
+  if (chartHeading) chartHeading.textContent = TEXT.trendHeading;
+
+  const todayHeading = $("todayHeading");
+  if (todayHeading) todayHeading.textContent = TEXT.todayHeading;
+
+  const trendHeading = $("trendHeading");
+  if (trendHeading) trendHeading.textContent = TEXT.trendHeading;
 
   const compareHeading = $("compareHeading");
   if (compareHeading) compareHeading.textContent = TEXT.compareHeading;
@@ -285,20 +296,35 @@ function showLoading(show) {
   $("emptyMsg").hidden = true;
 }
 
-function showToday(data) {
+function showToday(data, source, refreshedAt) {
   $("status").hidden = true;
   $("todaySection").hidden = false;
   $("chartSection").hidden = false;
   $("compareSection").hidden = true;
   $("emptyMsg").hidden = true;
 
+  updateSourceBar(source, refreshedAt);
+
   $("dataDate").textContent = TEXT.datePrefix + " " + data.date;
 
-  const first = (data.prices || [])[0];
-  const fmt = (v) => (v == null ? "N/A" : v.toString());
-  $("modalValue").textContent = "\u20B9" + fmt(first && first.modal_price);
-  $("minValue").textContent = "\u20B9" + fmt(first && first.min_price);
-  $("maxValue").textContent = "\u20B9" + fmt(first && first.max_price);
+  const grid = $("marketGrid");
+  grid.innerHTML = "";
+  const prices = data.prices || [];
+  if (!prices.length) {
+    showEmpty();
+    return;
+  }
+  prices.forEach((p) => {
+    const card = document.createElement("div");
+    card.className = "price-card";
+    const fmt = (v) => (v == null ? "N/A" : "\u20B9" + v);
+    card.innerHTML =
+      "<div class=\"card-market\">" + escapeHtml(p.market) + "</div>" +
+      "<div class=\"card-row-value\"><span class=\"card-label\">" + TEXT.modal + "</span> <span class=\"card-value\">" + fmt(p.modal_price) + "</span></div>" +
+      "<div class=\"card-row-value\"><span class=\"card-label\">" + TEXT.min + "</span> <span class=\"card-value\">" + fmt(p.min_price) + "</span></div>" +
+      "<div class=\"card-row-value\"><span class=\"card-label\">" + TEXT.max + "</span> <span class=\"card-value\">" + fmt(p.max_price) + "</span></div>";
+    grid.appendChild(card);
+  });
 }
 
 function showEmpty() {
@@ -309,12 +335,14 @@ function showEmpty() {
   $("emptyMsg").hidden = false;
 }
 
-function showCompare(data) {
+function showCompare(data, source, refreshedAt) {
   $("status").hidden = true;
   $("todaySection").hidden = true;
   $("chartSection").hidden = true;
   $("compareSection").hidden = false;
   $("emptyMsg").hidden = true;
+
+  updateSourceBar(source, refreshedAt);
 
   $("compareDate").textContent = TEXT.compareDatePrefix + " " + data.date;
 
@@ -340,6 +368,39 @@ function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+
+// Show a toast notification.
+function showToast(text, duration = 3000) {
+  const container = $("toastContainer");
+  if (!container) return;
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = text;
+  container.appendChild(toast);
+  // Trigger reflow to enable transition.
+  void toast.offsetWidth;
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+// Update the source/freshness bar.
+function updateSourceBar(source, refreshedAt) {
+  const bar = $("sourceBar");
+  const dot = $("sourceDot");
+  const text = $("sourceText");
+  const refreshText = $("refreshText");
+  if (!bar) return;
+  const isApi = source && source.toLowerCase().indexOf("api") !== -1;
+  if (dot) dot.className = "source-dot " + (isApi ? "api" : "csv");
+  if (text) text.textContent = isApi ? TEXT.sourceApi : TEXT.sourceCsv;
+  if (refreshText) refreshText.textContent = refreshedAt
+    ? TEXT.refreshed + " " + refreshedAt
+    : TEXT.refreshed + " just now";
+  bar.hidden = false;
 }
 
 function showError(msg) {
@@ -422,14 +483,16 @@ async function loadPrices(crop, district, market) {
       `${BASE}/prices/trend?crop=${encodeURIComponent(crop)}&market=${encodeURIComponent(market)}&days=30`
     );
     if (trendRes.status === 404) {
-      showToday(today);
+      const health = await fetchSourceInfo();
+      showToday(today, health.source, health.last_refresh_at);
       renderTrend([]);
       return;
     }
     if (!trendRes.ok) throw new Error("trend fetch failed");
     const trend = await trendRes.json();
 
-    showToday(today);
+    const health = await fetchSourceInfo();
+    showToday(today, health.source, health.last_refresh_at);
     renderTrend(trend.prices || []);
   } catch (err) {
     console.error("price load error", err);
@@ -454,10 +517,24 @@ async function loadCompare(crop, district) {
     }
     if (!res.ok) throw new Error("compare fetch failed");
     const data = await res.json();
-    showCompare(data);
+    const health = await fetchSourceInfo();
+    showCompare(data, health.source, health.last_refresh_at);
   } catch (err) {
     console.error("compare load error", err);
     showError(TEXT.error);
+  }
+}
+
+// Fetch source info from /health.
+async function fetchSourceInfo() {
+  try {
+    const res = await fetch(`${BASE}/health`);
+    if (!res.ok) return { source: null, last_refresh_at: null };
+    const data = await res.json();
+    return { source: data.last_source || null, last_refresh_at: data.last_refresh_at || null };
+  } catch (err) {
+    console.error("health fetch error", err);
+    return { source: null, last_refresh_at: null };
   }
 }
 
@@ -488,10 +565,12 @@ async function setAlert(formData) {
     if (!res.ok) throw new Error("alert create failed");
     await res.json();
     showAlertMsg(TEXT.alertCreated, "ok");
+    showToast(TEXT.toastAlertSet);
     $("alertForm").reset();
   } catch (err) {
     console.error("alert create error", err);
     showAlertMsg(TEXT.alertError, "err");
+    showToast(TEXT.toastAlertError);
   }
 }
 
@@ -560,6 +639,9 @@ function setupListeners() {
   refreshBtn.addEventListener("click", async () => {
     await loadMarkets(districtSel.value);
     loadPrices(cropSel.value, districtSel.value, marketSel.value);
+    const health = await fetchSourceInfo();
+    updateSourceBar(health.source, health.last_refresh_at);
+    showToast(TEXT.toastRefresh);
   });
 }
 

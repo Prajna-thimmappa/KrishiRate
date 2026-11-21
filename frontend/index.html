@@ -12,8 +12,10 @@
 <body>
 
   <header class="header">
-    <h1 class="txt-title">KrishiRate</h1>
-    <p class="txt-subtitle">Today's Mandi Prices</p>
+    <div class="header-inner">
+      <h1 class="txt-title">KrishiRate</h1>
+      <p class="txt-subtitle">Today's Mandi Prices</p>
+    </div>
     <div class="lang-toggle">
       <label for="lang">ಭಾಷೆ / Language</label>
       <select id="lang">
@@ -40,6 +42,14 @@
     <button id="refreshBtn">Refresh Prices</button>
     <button id="compareBtn">Compare Markets</button>
   </section>
+
+  <!-- Data source & freshness bar -->
+  <div class="source-bar" id="sourceBar" hidden>
+    <span class="source-dot" id="sourceDot"></span>
+    <span class="source-text" id="sourceText">Data from data.gov.in API</span>
+    <span class="source-divider">·</span>
+    <span class="refresh-text" id="refreshText">Last refreshed just now</span>
+  </div>
 
   <!-- Set price alert form -->
   <section class="alert-form" id="alertSection">
@@ -82,31 +92,21 @@
   <!-- Status / loading / error area -->
   <div id="status" class="status hidden">Loading...</div>
 
-  <!-- Today's price cards -->
+  <!-- Today's price cards (all markets) -->
   <section class="today-card" id="todaySection" hidden>
-    <div class="card-row">
-      <div class="price-card" id="modalCard">
-        <div class="card-label">Modal Price</div>
-        <div class="card-value" id="modalValue">&#8377;0</div>
-        <div class="card-unit">/quintal</div>
-      </div>
-      <div class="price-card" id="minCard">
-        <div class="card-label">Minimum Price</div>
-        <div class="card-value" id="minValue">&#8377;0</div>
-        <div class="card-unit">/quintal</div>
-      </div>
-      <div class="price-card" id="maxCard">
-        <div class="card-label">Maximum Price</div>
-        <div class="card-value" id="maxValue">&#8377;0</div>
-        <div class="card-unit">/quintal</div>
-      </div>
+    <div class="today-header">
+      <h2 id="todayHeading">Today's Prices</h2>
+      <p class="data-date" id="dataDate"></p>
     </div>
-    <p class="data-date" id="dataDate"></p>
+    <div class="market-grid" id="marketGrid"></div>
   </section>
 
   <!-- Market comparison -->
   <section class="compare-section" id="compareSection" hidden>
-    <h2 id="compareHeading">Market Comparison</h2>
+    <div class="section-header">
+      <h2 id="compareHeading">Market Comparison</h2>
+      <p id="compareDate" class="data-date"></p>
+    </div>
     <div class="table-wrapper">
       <table id="compareTable">
         <thead>
@@ -120,18 +120,22 @@
         <tbody id="compareBody"></tbody>
       </table>
     </div>
-    <p id="compareDate" class="data-date"></p>
   </section>
 
   <!-- Trend chart -->
   <section class="chart-section" id="chartSection" hidden>
-    <h2>30-Day Price Trend</h2>
+    <div class="section-header">
+      <h2 id="trendHeading">30-Day Price Trend</h2>
+    </div>
     <div class="chart-wrapper">
       <canvas id="trendChart"></canvas>
     </div>
   </section>
 
   <p id="emptyMsg" class="empty-msg hidden">No price data found for this selection.</p>
+
+  <!-- Toast notifications -->
+  <div id="toastContainer" class="toast-container"></div>
 
   <footer class="footer">
     <p>Data source: data.gov.in (Agmarknet) &middot; Falls back to sample data when offline</p>
