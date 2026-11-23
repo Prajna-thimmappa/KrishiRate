@@ -5,7 +5,7 @@ CSV fallback) and skips rows that already exist thanks to the unique
 constraint on ``(crop, market, date)``.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from sqlalchemy.exc import IntegrityError
@@ -66,7 +66,7 @@ def sync_prices(db: Session, commodity: str, district: str) -> dict:
             db.rollback()
             skipped += 1
 
-    LAST_REFRESH_AT = datetime.utcnow().isoformat()
+    LAST_REFRESH_AT = datetime.now(timezone.utc).isoformat()
 
     return {
         "fetched": fetched,

@@ -2,6 +2,7 @@ import os
 import sys
 import time
 from collections import defaultdict
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,7 +21,15 @@ from .services.alert_service import run_alert_job
 from .services.mandi_service import LAST_SOURCE
 from .services.sync_service import LAST_REFRESH_AT
 
-app = FastAPI(title="KrishiRate", version="0.3.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: create tables and start the alert scheduler."""
+    create_tables()
+    _start_scheduler()
+    yield
+
+
+app = FastAPI(title="KrishiRate", version="0.3.0", lifespan=lifespan)
 
 app.include_router(prices.router)
 app.include_router(alerts.router)
@@ -88,12 +97,6 @@ def _start_scheduler():
         replace_existing=True,
     )
     scheduler.start()
-
-
-@app.on_event("startup")
-def on_startup():
-    create_tables()
-    _start_scheduler()
 
 
 @app.get("/", response_class=FileResponse)

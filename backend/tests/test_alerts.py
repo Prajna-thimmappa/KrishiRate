@@ -1,6 +1,6 @@
 """Alert API and trigger logic tests with mocked Telegram."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
 from backend.app.models import Alert, Price
@@ -187,7 +187,7 @@ def test_24h_cooldown_prevents_retrigger(mock_send, session):
             target_price=420,
             condition="above",
             active=True,
-            last_triggered_at=datetime.utcnow() - timedelta(hours=1),
+            last_triggered_at=datetime.now(timezone.utc) - timedelta(hours=1),
         )
     )
     session.commit()
@@ -208,7 +208,7 @@ def test_trigger_after_cooldown_expired(mock_send, session):
             target_price=420,
             condition="above",
             active=True,
-            last_triggered_at=datetime.utcnow() - timedelta(hours=25),
+            last_triggered_at=datetime.now(timezone.utc) - timedelta(hours=25),
         )
     )
     session.commit()

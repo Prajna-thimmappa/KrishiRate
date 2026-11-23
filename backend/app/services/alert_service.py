@@ -6,7 +6,7 @@ price. Sends a Telegram message when the condition is met and avoids re-sending
 the same alert within a 24-hour cooldown window.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from sqlalchemy import func
@@ -74,7 +74,7 @@ def check_and_trigger_alerts(db: Session) -> int:
 
     Returns the number of alerts triggered.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     cooldown = timedelta(hours=COOLDOWN_HOURS)
     triggered = 0
 
@@ -82,7 +82,11 @@ def check_and_trigger_alerts(db: Session) -> int:
     for alert in alerts:
         # 24-hour cooldown: skip if triggered recently.
         if alert.last_triggered_at is not None:
-            if now - alert.last_triggered_at < cooldown:
+            triggered_at = alert.last_triggered_at
+            # SQLite returns offset-naive datetimes; treat them as UTC.
+            if triggered_at.tzinfo is None:
+                triggered_at = triggered_at.replace(tzinfo=timezone.utc)
+            if now - triggered_at < cooldown:
                 continue
 
         latest_date = db.query(func.max(Price.date)).filter(
